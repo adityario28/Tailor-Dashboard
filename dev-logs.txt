@@ -1,0 +1,77 @@
+nohup: ignoring input
+
+> tailor-dashboard@0.0.1 dev
+> astro dev
+
+[vite] connected.
+17:29:12 [types] Generated 0ms
+17:29:12 [WARN] [content] Content config not loaded
+ astro  v6.1.5 ready in 786 ms
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+17:29:12 watching for file changes...
+17:29:48 Configuration file updated. Restarting...
+[vite] connected.
+17:29:49 [vite] Re-optimizing dependencies because lockfile has changed
+17:29:49 [vite] server restarted.
+17:29:58 Configuration file updated. Restarting...
+[vite] connected.
+17:29:59 [vite] Re-optimizing dependencies because vite config has changed
+17:29:59 [vite] server restarted.
+17:30:19 Configuration file updated. Restarting...
+[vite] connected.
+17:30:20 [vite] Re-optimizing dependencies because lockfile has changed
+17:30:20 [vite] server restarted.
+17:30:22 Configuration file updated. Restarting...
+[vite] connected.
+17:30:21 [vite] Re-optimizing dependencies because vite config has changed
+17:30:21 [vite] server restarted.
+17:30:22 [vite] changed tsconfig file detected: /home/rio/tailor-dashboard/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] program reload
+17:30:22 Configuration file updated. Restarting...
+[vite] An error happened during full reload
+Failed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?
+Error: Failed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?
+    at loadAndTransform (file:///home/rio/tailor-dashboard/node_modules/vite/dist/node/chunks/config.js:22663:33)
+[vite] connected.
+17:30:22 [vite] server restarted.
+17:38:39 [vite] changed tsconfig file detected: /home/rio/tailor-dashboard/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[vite] program reload
+17:38:39 Configuration file updated. Restarting...
+[vite] An error happened during full reload
+Failed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?
+Error: Failed to load url astro:server-app.js (resolved id: astro:server-app.js). Does the file exist?
+    at loadAndTransform (file:///home/rio/tailor-dashboard/node_modules/vite/dist/node/chunks/config.js:22663:33)
+[vite] connected.
+17:38:40 [vite] Re-optimizing dependencies because vite config has changed
+17:38:40 [vite] server restarted.
+17:39:00 Configuration file updated. Restarting...
+[astro] Unable to load your Astro config
+
+17:39:00 [ERROR] [config] Cannot find module '@astrojs/tailwind' imported from '/home/rio/tailor-dashboard/astro.config.mjs'
+  Stack trace:
+    at /home/rio/tailor-dashboard/node_modules/vite/dist/node/chunks/config.js:33984:34
+    [...] See full stack trace in the browser, or rerun with --verbose.
+
+17:39:00 [ERROR] Continuing with previous valid configuration
+
+17:39:08 Configuration file updated. Restarting...
+[astro] Unable to load your Astro config
+
+17:39:08 [ERROR] [config] Cannot find module '@astrojs/tailwind' imported from '/home/rio/tailor-dashboard/astro.config.mjs'
+  Stack trace:
+    at fetchModule (file:///home/rio/tailor-dashboard/node_modules/vite/dist/node/chunks/config.js:33984:34)
+    [...] See full stack trace in the browser, or rerun with --verbose.
+
+17:39:08 [ERROR] Continuing with previous valid configuration
+
+17:39:51 Configuration file updated. Restarting...
+[astro] Unable to load your Astro config
+
+17:39:51 [ERROR] [config] Cannot find module '@astrojs/tailwind' imported from '/home/rio/tailor-dashboard/astro.config.mjs'
+  Stack trace:
+    at fetchModule (file:///home/rio/tailor-dashboard/node_modules/vite/dist/node/chunks/config.js:33984:34)
+    [...] See full stack trace in the browser, or rerun with --verbose.
+
+17:39:51 [ERROR] Continuing with previous valid configuration
+
