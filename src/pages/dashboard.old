@@ -1,0 +1,117 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+---
+<AdminLayout title="Dashboard">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-950">Dashboard</h1>
+        <p class="text-slate-500 mt-1">Selamat datang di Tailor App</p>
+      </div>
+      <a href="/new-order">
+        <Button className="h-12 px-6 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Tambah Pesanan
+        </Button>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader><CardTitle class="text-sm font-medium text-slate-500">Total Pesanan</CardTitle></CardHeader>
+        <CardContent><p class="text-3xl font-bold text-slate-900" id="total-orders">—</p></CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle class="text-sm font-medium text-slate-500">Sedang Dikerjakan</CardTitle></CardHeader>
+        <CardContent><p class="text-3xl font-bold text-amber-500" id="orders-active">—</p></CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle class="text-sm font-medium text-slate-500">Siap Diambil</CardTitle></CardHeader>
+        <CardContent><p class="text-3xl font-bold text-green-600" id="orders-done">—</p></CardContent>
+      </Card>
+    </div>
+
+    <Card>
+      <CardHeader><CardTitle>Daftar Pesanan</CardTitle></CardHeader>
+      <CardContent>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-slate-500 text-left">
+              <th class="pb-3 font-medium">Nama Pelanggan</th>
+              <th class="pb-3 font-medium">Jenis</th>
+              <th class="pb-3 font-medium">Tanggal</th>
+              <th class="pb-3 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </CardContent>
+    </Card>
+  </div>
+
+  <script>
+    import { db, STATUS_FLOW } from '@/lib/db';
+    import type { OrderStatus } from '@/lib/db';
+
+    const STATUS_COLORS: Record<OrderStatus, string> = {
+      'Cuci Bahan':   'bg-blue-100 text-blue-700',
+      'Potong Bahan': 'bg-orange-100 text-orange-700',
+      'Jahit':        'bg-purple-100 text-purple-700',
+      'Finishing':    'bg-yellow-100 text-yellow-700',
+      'Siap Diambil': 'bg-green-100 text-green-700',
+    };
+
+    async function loadDashboard() {
+      const all = await db.customers.toArray();
+      const done = all.filter(c => c.status === 'Siap Diambil');
+      const active = all.filter(c => c.status !== 'Siap Diambil');
+
+      document.getElementById('total-orders')!.textContent = String(all.length);
+      document.getElementById('orders-active')!.textContent = String(active.length);
+      document.getElementById('orders-done')!.textContent = String(done.length);
+
+      const tbody = document.getElementById('orders-tbody')!;
+      if (all.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada pesanan.</td></tr>`;
+        return;
+      }
+
+      const sorted = all.sort((a, b) => new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime());
+      tbody.innerHTML = sorted.map(c => {
+        const date = new Date(c.lastVisit).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        const currentIdx = STATUS_FLOW.indexOf(c.status);
+        // Only show statuses from current onward (forward-only)
+        const options = STATUS_FLOW.slice(currentIdx).map(s =>
+          `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`
+        ).join('');
+        const colorClass = STATUS_COLORS[c.status] ?? '';
+        return `
+          <tr class="border-b last:border-0 hover:bg-slate-50">
+            <td class="py-3 font-medium text-slate-900">${c.name}</td>
+            <td class="py-3 text-slate-600">${c.outfitType}</td>
+            <td class="py-3 text-slate-500">${date}</td>
+            <td class="py-3">
+              <select data-id="${c.id}" class="status-select text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${colorClass}">
+                ${options}
+              </select>
+            </td>
+          </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll<HTMLSelectElement>('.status-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          await db.customers.update(Number(sel.dataset.id), { status: sel.value as OrderStatus });
+          loadDashboard();
+        });
+      });
+    }
+
+    loadDashboard();
+  </script>
+</AdminLayout>

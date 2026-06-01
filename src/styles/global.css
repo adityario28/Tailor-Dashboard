@@ -128,3 +128,6 @@
     @apply font-sans;
     }
 }
+
+@source "../../src";
+@source "../**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}";
