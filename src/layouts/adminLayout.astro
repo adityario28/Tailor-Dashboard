@@ -4,6 +4,7 @@ interface Props {
 }
 const { title } = Astro.props;
 import '@/styles/global.css';
+import { Toaster } from '@/components/ui/sonner';
 ---
 <html lang="en">
   <head></head>
@@ -51,10 +52,8 @@ import '@/styles/global.css';
       const sidebar = document.getElementById('sidebar')!;
       const title = document.getElementById('sidebar-title')!;
       const labels = sidebar.querySelectorAll<HTMLElement>('.nav-label');
-      let collapsed = false;
 
-      document.getElementById('sidebar-toggle')!.addEventListener('click', () => {
-        collapsed = !collapsed;
+      function applyCollapsed(collapsed: boolean) {
         if (collapsed) {
           sidebar.style.width = '56px';
           title.style.display = 'none';
@@ -64,7 +63,18 @@ import '@/styles/global.css';
           title.style.display = '';
           labels.forEach(el => el.style.display = '');
         }
+      }
+
+      // Restore persisted state immediately (no transition flash)
+      let collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      applyCollapsed(collapsed);
+
+      document.getElementById('sidebar-toggle')!.addEventListener('click', () => {
+        collapsed = !collapsed;
+        localStorage.setItem('sidebar-collapsed', String(collapsed));
+        applyCollapsed(collapsed);
       });
     </script>
+    <Toaster client:only="react" />
   </body>
 </html>

@@ -120,17 +120,78 @@ const outfitOptions = [
 
             <hr />
 
-            <div class="grid px-3 grid-cols-2 gap-x-9 gap-y-6">
+            {/* Jas fields */}
+            <div id="fields-jas" class="grid px-3 grid-cols-2 gap-x-9 gap-y-6">
               {
                 [
-                  ["panjangBadan", "Panjang Badan"],
-                  ["lebarBahu", "Lebar Bahu"],
-                  ["panjangLengan", "Panjang Lengan"],
-                  ["lingkarLengan", "Lingkar Lengan"],
+                  ["panjangBadan",       "Panjang Badan"],
+                  ["lebarBahu",          "Lebar Bahu"],
+                  ["panjangLengan",      "Panjang Lengan"],
+                  ["lingkarLengan",      "Lingkar Lengan"],
                   ["lingkarUjungLengan", "Lingkar Ujung Lengan"],
-                  ["lingkarDada", "Lingkar Dada"],
-                  ["lingkarPerut", "Lingkar Perut"],
-                  ["lingkarPinggul", "Lingkar Pinggul"],
+                  ["lingkarDada",        "Lingkar Dada"],
+                  ["lingkarPerut",       "Lingkar Perut"],
+                  ["lingkarPinggul",     "Lingkar Pinggul"],
+                ].map(([id, label], i) => (
+                  <div class="space-y-2 relative">
+                    <div class="absolute left-[-1.75rem] top-[2.75rem] -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-sm">
+                      {i + 1}
+                    </div>
+                    <Label>{label} (cm)</Label>
+                    <Input
+                      id={id}
+                      type="text"
+                      inputmode="decimal"
+                      placeholder="0,0"
+                      className="h-12 border-2"
+                    />
+                  </div>
+                ))
+              }
+            </div>
+
+            {/* Kemeja lengan panjang fields */}
+            <div id="fields-kemeja-panjang" class="hidden grid px-3 grid-cols-2 gap-x-9 gap-y-6">
+              {
+                [
+                  ["lingkarLeher",      "Lingkar Leher"],
+                  ["lebarBahu",         "Lebar Bahu"],
+                  ["panjangLengan",     "Panjang Lengan"],
+                  ["lingkarDada",       "Lingkar Dada"],
+                  ["lingkarPerut",      "Lingkar Perut"],
+                  ["panjangBadan",      "Panjang Badan"],
+                  ["lingkarUjungLengan","Lingkar Ujung Lengan"],
+                  ["lingkarPinggul",    "Lingkar Pinggul"],
+                ].map(([id, label], i) => (
+                  <div class="space-y-2 relative">
+                    <div class="absolute left-[-1.75rem] top-[2.75rem] -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-sm">
+                      {i + 1}
+                    </div>
+                    <Label>{label} (cm)</Label>
+                    <Input
+                      id={id}
+                      type="text"
+                      inputmode="decimal"
+                      placeholder="0,0"
+                      className="h-12 border-2"
+                    />
+                  </div>
+                ))
+              }
+            </div>
+
+            {/* Kemeja lengan pendek fields */}
+            <div id="fields-kemeja-pendek" class="hidden grid px-3 grid-cols-2 gap-x-9 gap-y-6">
+              {
+                [
+                  ["lingkarLeher", "Lingkar Leher"],
+                  ["lebarBahu", "Panjang Bahu"],
+                  ["panjangLengan", "Panjang Lengan"],
+                  ["lebarPundak", "Lebar Pundak"],
+                  ["lingkarDada", "Lebar Dada"],
+                  ["panjangBadan", "Panjang Badan"],
+                  ["lingkarLengan", "Lingkar Lengan"],
+                  ["lingkarPinggul", "Lebar Pinggul"],
                 ].map(([id, label], i) => (
                   <div class="space-y-2 relative">
                     <div class="absolute left-[-1.75rem] top-[2.75rem] -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-sm">
@@ -215,7 +276,7 @@ const outfitOptions = [
           <p class="text-sm text-slate-500 mb-3 font-medium">
             Pratinjau Sketsa
           </p>
-          <div class="w-full h-full max-w-md" style="min-height: 500px;">
+          <div class="w-full h-full" style="min-height: 500px;">
             <MeasurementSketch client:only="react" />
           </div>
         </div>
@@ -235,6 +296,7 @@ const outfitOptions = [
       syncPending,
     } from "@/lib/db";
     import type { Customer, PresetCustomer } from "@/lib/db";
+    import { toast } from "sonner";
     import { trx } from "@/lib/supabase";
 
     window.addEventListener("online", () => syncPending());
@@ -273,6 +335,57 @@ const outfitOptions = [
       "lingkarPinggul",
     ];
 
+    const REQUIRED_KEMEJA_PANJANG = [
+      "lingkarLeher",
+      "lebarBahu",
+      "panjangLengan",
+      "lingkarDada",
+      "lingkarPerut",
+      "panjangBadan",
+      "lingkarUjungLengan",
+      "lingkarPinggul",
+    ];
+
+    const REQUIRED_KEMEJA_PENDEK = [
+      "lingkarLeher",
+      "lebarBahu",
+      "panjangLengan",
+      "lebarPundak",
+      "lingkarDada",
+      "panjangBadan",
+      "lingkarLengan",
+      "lingkarPinggul",
+    ];
+
+    function isKemejaLenganPendek(outfit: string) {
+      return outfit.toLowerCase().includes('kemeja') && outfit.toLowerCase().includes('pendek');
+    }
+
+    function isKemejaLenganPanjang(outfit: string) {
+      return outfit.toLowerCase().includes('kemeja') && outfit.toLowerCase().includes('panjang');
+    }
+
+    function getActiveRequired(outfit: string) {
+      if (isKemejaLenganPendek(outfit)) return REQUIRED_KEMEJA_PENDEK;
+      if (isKemejaLenganPanjang(outfit)) return REQUIRED_KEMEJA_PANJANG;
+      return REQUIRED;
+    }
+
+    function switchFieldSet(outfit: string) {
+      const jasEl = document.getElementById('fields-jas')!;
+      const panjangEl = document.getElementById('fields-kemeja-panjang')!;
+      const pendekEl = document.getElementById('fields-kemeja-pendek')!;
+      const show = (el: HTMLElement) => { el.classList.remove('hidden'); el.classList.add('grid'); };
+      const hide = (el: HTMLElement) => { el.classList.add('hidden'); el.classList.remove('grid'); };
+      if (isKemejaLenganPendek(outfit)) {
+        hide(jasEl); hide(panjangEl); show(pendekEl);
+      } else if (isKemejaLenganPanjang(outfit)) {
+        hide(jasEl); show(panjangEl); hide(pendekEl);
+      } else {
+        show(jasEl); hide(panjangEl); hide(pendekEl);
+      }
+    }
+
     function updateKainDefaults(outfit: string) {
       console.log(
         "new-order.astro: updateKainDefaults called for outfit:",
@@ -300,6 +413,7 @@ const outfitOptions = [
         );
       }
     }
+    (window as any).__lastOutfit = 'Jas';
     updateKainDefaults("Jas");
 
     // Fill form when existing customer + preset selected
@@ -315,79 +429,152 @@ const outfitOptions = [
       g("selectedCustomerId").value = String(customer.id);
       g("name").value = customer.name ?? "";
       g("phone").value = customer.phone ?? "";
+
+      function setFieldValue(id: string, value: string) {
+        const elements = document.querySelectorAll(`#${id}`);
+        elements.forEach((el) => {
+          if (el instanceof HTMLInputElement) {
+            el.value = value;
+          }
+        });
+        window.dispatchEvent(
+          new CustomEvent("measurement-update", {
+            detail: { id: id, value: value },
+          }),
+        );
+      }
+
       if (preset) {
         g("selectedPresetId").value = String(preset.id ?? "");
         g("outfitType").value = preset.outfit_type ?? "";
-        g("panjangKain").value = String(preset.panjang_kain ?? "");
-        g("lebarKain").value = String(preset.lebar_kain ?? "");
+        if (preset.panjang_kain) {
+          g("panjangKain").value = String(preset.panjang_kain);
+        }
+        if (preset.lebar_kain) {
+          g("lebarKain").value = String(preset.lebar_kain);
+        }
         // Set cuci_sebelum_potong checkbox
-        const cuciEl = document.getElementById("cuciSebelumPotong") as HTMLElement;
+        const cuciEl = document.getElementById(
+          "cuciSebelumPotong",
+        ) as HTMLElement;
         const cuciShouldBeChecked = !!preset.cuci_sebelum_potong;
         const cuciIsChecked = cuciEl?.dataset.state === "checked";
         if (cuciEl && cuciShouldBeChecked !== cuciIsChecked) cuciEl.click();
-        REQUIRED.forEach((field) => {
-          const el = g(field);
+        const allFields = [...new Set([...REQUIRED, ...REQUIRED_KEMEJA_PANJANG, ...REQUIRED_KEMEJA_PENDEK])];
+        allFields.forEach((field) => {
           const key = field
             .replace(/([A-Z])/g, "_$1")
             .toLowerCase() as keyof PresetCustomer;
-          if (el && preset[key] != null) {
-            el.value = String(preset[key]);
-            window.dispatchEvent(new CustomEvent("measurement-update", { detail: { id: field, value: el.value } }));
+          if (preset[key] != null) {
+            setFieldValue(field, String(preset[key]));
           }
         });
         window.dispatchEvent(
           new CustomEvent("outfit-update", { detail: preset.outfit_type }),
         );
+        switchFieldSet(preset.outfit_type ?? "");
       } else {
         // Ukuran Baru: clear measurement fields, keep customer info
         g("selectedPresetId").value = "";
-        REQUIRED.forEach((field) => { const el = g(field); if (el) el.value = ""; });
-        g("panjangKain").value = "";
-        g("lebarKain").value = "";
-        // fire reset on sketch
-        REQUIRED.forEach((field) =>
-          window.dispatchEvent(new CustomEvent("measurement-update", { detail: { id: field, value: "" } }))
+        [...new Set([...REQUIRED, ...REQUIRED_KEMEJA_PANJANG, ...REQUIRED_KEMEJA_PENDEK])].forEach((field) => {
+          setFieldValue(field, "");
+        });
+      }
+    });
+
+    // Make setFieldValue globally accessible for other event handlers
+    function setFieldValue(id: string, value: string) {
+      const elements = document.querySelectorAll(`#${id}`);
+      elements.forEach((el) => {
+        if (el instanceof HTMLInputElement) {
+          el.value = value;
+        }
+      });
+      window.dispatchEvent(
+        new CustomEvent("measurement-update", {
+          detail: { id: id, value: value },
+        }),
+      );
+    }
+
+    form?.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.classList.contains("field-error")) {
+        target.classList.remove("field-error");
+        target.style.removeProperty("border-color");
+        target.style.removeProperty("box-shadow");
+      }
+      if (target.id) {
+        setFieldValue(target.id, target.value);
+      } else {
+        window.dispatchEvent(
+          new CustomEvent("measurement-update", {
+            detail: { id: target.id, value: target.value },
+          }),
         );
       }
     });
 
-    form?.addEventListener("input", (e) => {
-      const target = e.target as HTMLInputElement;
-      window.dispatchEvent(
-        new CustomEvent("measurement-update", {
-          detail: { id: target.id, value: target.value },
-        }),
-      );
-    });
-
     form?.addEventListener("focusin", (e) => {
       const id = (e.target as HTMLElement).id;
-      window.dispatchEvent(new CustomEvent("measurement-focus", { detail: id }));
+      window.dispatchEvent(
+        new CustomEvent("measurement-focus", { detail: id }),
+      );
     });
     form?.addEventListener("focusout", () => {
-      window.dispatchEvent(new CustomEvent("measurement-focus", { detail: null }));
+      window.dispatchEvent(
+        new CustomEvent("measurement-focus", { detail: null }),
+      );
     });
 
     window.addEventListener("outfit-changed", (e) => {
       const val = (e as CustomEvent).detail;
-      console.log("new-order.astro: outfit-changed received value:", val);
       const el = g("outfitType");
       if (el) el.value = val;
+      (window as any).__lastOutfit = val;
       window.dispatchEvent(new CustomEvent("outfit-update", { detail: val }));
       updateKainDefaults(val);
+      switchFieldSet(val);
     });
+
+    function highlightFields(ids: string[]) {
+      // Clear previous highlights
+      document.querySelectorAll(".field-error").forEach((el) => {
+        el.classList.remove("field-error");
+        (el as HTMLElement).style.removeProperty("border-color");
+        (el as HTMLElement).style.removeProperty("box-shadow");
+      });
+      if (ids.length === 0) return;
+      const activeSection = document.querySelector('[id^="fields-"]:not(.hidden)') as HTMLElement;
+      ids.forEach((id, i) => {
+        const el = (activeSection?.querySelector(`#${id}`) ?? document.getElementById(id)) as HTMLElement | null;
+        if (!el) return;
+        el.classList.add("field-error");
+        el.style.borderColor = "rgb(239,68,68)";
+        el.style.boxShadow = "0 0 0 2px rgba(239,68,68,0.3)";
+        if (i === 0) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
 
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
+      highlightFields([]);
       const outfitValue = g("outfitType").value;
       if (!outfitValue) {
-        alert("Pilih jenis pakaian terlebih dahulu.");
+        toast.error("Pilih jenis pakaian terlebih dahulu.");
+        const outfitEl = document.getElementById("outfitType")?.closest(".space-y-2") as HTMLElement | null;
+        if (outfitEl) outfitEl.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
-      const empty = REQUIRED.filter((id) => !parseVal(g(id).value));
+      const activeSection = document.querySelector('[id^="fields-"]:not(.hidden)') as HTMLElement;
+      const empty = getActiveRequired(outfitValue).filter((id) => {
+        const el = (activeSection?.querySelector(`#${id}`) ?? document.getElementById(id)) as HTMLInputElement | null;
+        return !parseVal(el?.value ?? "");
+      });
       if (empty.length > 0) {
-        alert("Harap isi semua 8 field ukuran sebelum menyimpan.");
+        toast.error("Harap isi semua 8 field ukuran sebelum menyimpan.");
+        highlightFields(empty);
         return;
       }
 
@@ -397,19 +584,26 @@ const outfitOptions = [
       const cuci =
         cuciEl?.dataset.state === "checked" || cuciEl?.checked || false;
 
+      // Read from the active (visible) section to avoid duplicate-id issue
+      const gActive = (id: string): HTMLInputElement => {
+        return (activeSection?.querySelector(`#${id}`) ?? document.getElementById(id)) as HTMLInputElement;
+      };
+
       const measurements = {
         outfit_type: outfitValue,
         panjang_kain: parseVal(g("panjangKain").value),
         lebar_kain: parseVal(g("lebarKain").value),
         cuci_sebelum_potong: cuci,
-        panjang_badan: parseVal(g("panjangBadan").value),
-        lebar_bahu: parseVal(g("lebarBahu").value),
-        panjang_lengan: parseVal(g("panjangLengan").value),
-        lingkar_lengan: parseVal(g("lingkarLengan").value),
-        lingkar_ujung_lengan: parseVal(g("lingkarUjungLengan").value),
-        lingkar_dada: parseVal(g("lingkarDada").value),
-        lingkar_perut: parseVal(g("lingkarPerut").value),
-        lingkar_pinggul: parseVal(g("lingkarPinggul").value),
+        panjang_badan: parseVal(gActive("panjangBadan").value),
+        lebar_bahu: parseVal(gActive("lebarBahu").value),
+        panjang_lengan: parseVal(gActive("panjangLengan").value),
+        lingkar_lengan: parseVal(gActive("lingkarLengan").value),
+        lingkar_ujung_lengan: parseVal(gActive("lingkarUjungLengan").value),
+        lingkar_dada: parseVal(gActive("lingkarDada").value),
+        lingkar_perut: parseVal(gActive("lingkarPerut").value),
+        lingkar_pinggul: parseVal(gActive("lingkarPinggul").value),
+        lingkar_leher: parseVal(gActive("lingkarLeher")?.value ?? "") || undefined,
+        lebar_pundak: parseVal(gActive("lebarPundak")?.value ?? "") || undefined,
         catatan: (document.getElementById("catatan") as HTMLTextAreaElement)
           .value,
       };
@@ -421,7 +615,7 @@ const outfitOptions = [
         if (!customerId) {
           const name = g("name").value.trim();
           if (!name) {
-            alert("Masukkan nama pelanggan.");
+            toast.error("Masukkan nama pelanggan.");
             return;
           }
           const newCustomer: Customer = {
@@ -431,13 +625,19 @@ const outfitOptions = [
             synced: false,
           };
           customerId = (await db.customer.add(newCustomer)) as number;
-          supabaseCustomerId = await syncCustomer({ ...newCustomer, id: customerId });
+          supabaseCustomerId = await syncCustomer({
+            ...newCustomer,
+            id: customerId,
+          });
         } else if (navigator.onLine) {
           // Existing customer: look up their Supabase ID by name
           const localCustomer = await db.customer.get(customerId);
           if (localCustomer?.name) {
-          const { data } = await trx
-              .from("customer").select("id").eq("name", localCustomer.name).single();
+            const { data } = await trx
+              .from("customer")
+              .select("id")
+              .eq("name", localCustomer.name)
+              .single();
             if (data?.id) supabaseCustomerId = data.id as number;
           }
         }
@@ -462,7 +662,10 @@ const outfitOptions = [
             synced: false,
           };
           presetId = (await db.preset_customer.add(newPreset)) as number;
-          const spid = await syncPreset({ ...newPreset, id: presetId }, supabaseCustomerId ?? undefined);
+          const spid = await syncPreset(
+            { ...newPreset, id: presetId },
+            supabaseCustomerId ?? undefined,
+          );
           supabasePresetId = spid ?? undefined;
         }
 
@@ -476,7 +679,11 @@ const outfitOptions = [
           synced: false,
         } as import("@/lib/db").Transaction;
         const trxId = (await db.transaction.add(newTrx)) as number;
-        await syncTransaction({ ...newTrx, id: trxId }, supabaseCustomerId ?? undefined, supabasePresetId);
+        await syncTransaction(
+          { ...newTrx, id: trxId },
+          supabaseCustomerId ?? undefined,
+          supabasePresetId,
+        );
 
         // printReceipt({
         //   ...measurements,
@@ -492,7 +699,7 @@ const outfitOptions = [
         window.dispatchEvent(new CustomEvent("order-success"));
       } catch (err) {
         console.error(err);
-        alert("Gagal menyimpan data.");
+        toast.error("Gagal menyimpan data.");
       }
     });
 

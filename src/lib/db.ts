@@ -29,6 +29,8 @@ export interface PresetCustomer {
   lingkar_dada?: number;
   lingkar_perut?: number;
   lingkar_pinggul?: number;
+  lingkar_leher?: number;
+  lebar_pundak?: number;
   catatan?: string;
   synced?: boolean;
 }
@@ -49,6 +51,8 @@ export interface Transaction {
   lingkar_dada?: number;
   lingkar_perut?: number;
   lingkar_pinggul?: number;
+  lingkar_leher?: number;
+  lebar_pundak?: number;
   catatan?: string;
   status: OrderStatus;
   synced?: boolean;
@@ -61,7 +65,7 @@ export class TailorDatabase extends Dexie {
 
   constructor() {
     super('TailorDB');
-    this.version(6).stores({
+    this.version(7).stores({
       customer: '++id, name, synced',
       preset_customer: '++id, customer_id, synced',
       transaction: '++id, customer_id, synced',

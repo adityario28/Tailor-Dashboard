@@ -65,10 +65,28 @@ export default function CustomerSearch() {
   }
 
   async function selectCustomer(c: CustomerWithId & { _source: 'local' | 'remote' }) {
-    setSelected(c);
+    let localCustomer = c;
+    if (c._source === 'remote') {
+      const existing = await db.customer.where('name').equals(c.name).first();
+      if (existing) {
+        localCustomer = { ...existing, _source: 'local' } as CustomerWithId & { _source: 'local' };
+      } else {
+        const newLocalId = await db.customer.add({
+          name: c.name,
+          phone: c.phone,
+          synced: true,
+        });
+        localCustomer = { id: newLocalId, name: c.name, phone: c.phone, synced: true, _source: 'local' } as CustomerWithId & { _source: 'local' };
+      }
+    }
+
+    setSelected(localCustomer);
     setOpen(false);
     skipSearch.current = true;
-    setQuery(c.name);
+    setQuery(localCustomer.name);
+
+    // Dispatch customer-selected immediately to load customer details (like phone)
+    window.dispatchEvent(new CustomEvent("customer-selected", { detail: { isNew: false, customer: localCustomer, preset: undefined } }));
 
     // Load presets: use Dexie for local customers, Supabase for remote-only
     let allPresets: PresetCustomer[] = [];
@@ -92,6 +110,10 @@ export default function CustomerSearch() {
         if (data) allPresets = data as PresetCustomer[];
       }
     }
+
+    // Map preset customer_ids to the local customer id so they are associated correctly
+    allPresets = allPresets.map(p => ({ ...p, customer_id: localCustomer.id }));
+
     setPresets(allPresets);
   }
 
