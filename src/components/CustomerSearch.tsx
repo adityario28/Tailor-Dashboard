@@ -30,7 +30,19 @@ export default function CustomerSearch() {
       setOpen(false);
     };
     window.addEventListener('measurement-reset', handleReset);
-    return () => window.removeEventListener('measurement-reset', handleReset);
+    
+    const handleDraftRestore = (e: Event) => {
+      const { name } = (e as CustomEvent).detail;
+      if (name) {
+        setQuery(name);
+      }
+    };
+    window.addEventListener('draft-restore', handleDraftRestore);
+    
+    return () => {
+      window.removeEventListener('measurement-reset', handleReset);
+      window.removeEventListener('draft-restore', handleDraftRestore);
+    };
   }, []);
 
   async function search(q: string) {
@@ -142,7 +154,13 @@ export default function CustomerSearch() {
               </li>
             ))}
             <li
-              onClick={() => { setOpen(false); setSelected(null); setPresets([]); window.dispatchEvent(new CustomEvent("customer-selected", { detail: { isNew: true } })); }}
+              onClick={() => { 
+                setOpen(false); 
+                setSelected(null); 
+                setPresets([]); 
+                // Keep the typed name
+                window.dispatchEvent(new CustomEvent("customer-selected", { detail: { isNew: true, typedName: query } })); 
+              }}
               className="px-4 py-3 cursor-pointer hover:bg-green-50 text-green-700 font-medium"
             >
               + Pelanggan Baru
@@ -152,7 +170,10 @@ export default function CustomerSearch() {
         {open && results.length === 0 && query.trim() && (
           <div className="absolute z-50 w-full mt-1 bg-white border-2 border-slate-200 rounded-md shadow-lg">
             <div
-              onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("customer-selected", { detail: { isNew: true } })); }}
+              onClick={() => { 
+                setOpen(false); 
+                window.dispatchEvent(new CustomEvent("customer-selected", { detail: { isNew: true, typedName: query } })); 
+              }}
               className="px-4 py-3 cursor-pointer hover:bg-green-50 text-green-700 font-medium"
             >
               + Pelanggan Baru: "{query}"

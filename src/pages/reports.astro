@@ -1,0 +1,7 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import PaymentReports from '@/components/PaymentReports';
+---
+<AdminLayout title="Laporan Keuangan">
+  <PaymentReports client:only="react" />
+</AdminLayout>

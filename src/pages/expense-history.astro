@@ -1,0 +1,7 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import ExpenseHistory from '@/components/ExpenseHistory';
+---
+<AdminLayout title="Riwayat Pengeluaran">
+  <ExpenseHistory client:only="react" />
+</AdminLayout>

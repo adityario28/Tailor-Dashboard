@@ -2,9 +2,15 @@
 import AdminLayout from "@/layouts/adminLayout.astro";
 import OrderDetail from "@/components/OrderDetail";
 
-const orderId = Number(Astro.url.searchParams.get('id'));
+const idParam = Astro.url.searchParams.get('id');
+const srcParam = Astro.url.searchParams.get('src');
+
+const orderId = idParam ? Number(idParam) : 0;
+const source = (srcParam === 'local' || srcParam === 'remote') ? srcParam : null;
+
+console.log('order.astro - idParam:', idParam, 'orderId:', orderId, 'srcParam:', srcParam, 'source:', source);
 ---
 
 <AdminLayout title="Detail Pesanan">
-  <OrderDetail orderId={orderId} client:only="react" />
+  <OrderDetail orderId={orderId} source={source} client:only="react" />
 </AdminLayout>

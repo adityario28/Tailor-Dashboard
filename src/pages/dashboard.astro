@@ -2,6 +2,9 @@
 import AdminLayout from "@/layouts/adminLayout.astro";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import OrdersTable from "@/components/OrdersTable";
+import DashboardMetrics from "@/components/DashboardMetrics";
+import { Skeleton } from "@/components/ui/skeleton";
 ---
 
 <AdminLayout title="Dashboard">
@@ -35,46 +38,47 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
       </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Skeleton placeholder for metrics (shows immediately) -->
+    <div id="metrics-skeleton" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
-        <CardHeader
-          ><CardTitle class="text-sm font-medium text-slate-500"
-            >Total Pesanan</CardTitle
-          ></CardHeader
-        >
-        <CardContent
-          ><p class="text-3xl font-bold text-slate-900" id="total-orders">
-            —
-          </p></CardContent
-        >
+        <CardHeader>
+          <CardTitle class="text-sm font-medium text-slate-500">
+            Total Pesanan
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-16" />
+        </CardContent>
       </Card>
       <Card>
-        <CardHeader
-          ><CardTitle class="text-sm font-medium text-slate-500"
-            >Sedang Dikerjakan</CardTitle
-          ></CardHeader
-        >
-        <CardContent
-          ><p class="text-3xl font-bold text-amber-500" id="orders-active">
-            —
-          </p></CardContent
-        >
+        <CardHeader>
+          <CardTitle class="text-sm font-medium text-slate-500">
+            Sedang Dikerjakan
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-16" />
+        </CardContent>
       </Card>
       <Card>
-        <CardHeader
-          ><CardTitle class="text-sm font-medium text-slate-500"
-            >Siap Diambil</CardTitle
-          ></CardHeader
-        >
-        <CardContent
-          ><p class="text-3xl font-bold text-green-600" id="orders-done">
-            —
-          </p></CardContent
-        >
+        <CardHeader>
+          <CardTitle class="text-sm font-medium text-slate-500">
+            Siap Diambil
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-16" />
+        </CardContent>
       </Card>
     </div>
 
-    <Card>
+    <!-- React component (hidden until loaded, then replaces skeleton) -->
+    <div id="metrics-real" style="display: none;">
+      <DashboardMetrics client:only="react" />
+    </div>
+
+    <!-- Skeleton for table -->
+    <Card id="table-skeleton">
       <CardHeader><CardTitle>Daftar Pesanan</CardTitle></CardHeader>
       <CardContent>
         <table class="w-full text-sm">
@@ -83,165 +87,56 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
               <th class="pb-3 font-medium">Nama Pelanggan</th>
               <th class="pb-3 font-medium">Jenis</th>
               <th class="pb-3 font-medium">Tanggal</th>
+              <th class="pb-3 font-medium">Status Pembayaran</th>
               <th class="pb-3 font-medium">Status</th>
             </tr>
           </thead>
-          <tbody id="orders-tbody">
-            <tr
-              ><td colspan="5" class="py-8 text-center text-slate-400"
-                >Memuat data...</td
-              ></tr
-            >
+          <tbody>
+            {[...Array(5)].map((_, i) => (
+              <tr key={i} class="border-b">
+                <td class="py-3"><Skeleton className="h-5 w-32" /></td>
+                <td class="py-3"><Skeleton className="h-5 w-40" /></td>
+                <td class="py-3"><Skeleton className="h-5 w-28" /></td>
+                <td class="py-3"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                <td class="py-3"><Skeleton className="h-6 w-24 rounded-full" /></td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </CardContent>
     </Card>
+
+    <!-- React table (hidden until loaded) -->
+    <div id="table-real" style="display: none;">
+      <Card>
+        <CardHeader><CardTitle>Daftar Pesanan</CardTitle></CardHeader>
+        <CardContent>
+          <OrdersTable client:only="react" />
+        </CardContent>
+      </Card>
+    </div>
   </div>
 
   <script>
-    import { db, STATUS_FLOW } from "@/lib/db";
-    import { trx } from "@/lib/supabase";
-    import type { OrderStatus, Transaction, Customer } from "@/lib/db";
+    // Show React components and hide skeletons once loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wait a bit for React to hydrate
+      setTimeout(() => {
+        const metricsSkeleton = document.getElementById('metrics-skeleton');
+        const metricsReal = document.getElementById('metrics-real');
+        const tableSkeleton = document.getElementById('table-skeleton');
+        const tableReal = document.getElementById('table-real');
 
-    const STATUS_COLORS: Record<OrderStatus, string> = {
-      "Cuci Bahan": "bg-blue-100 text-blue-700",
-      "Potong Bahan": "bg-orange-100 text-orange-700",
-      Jahit: "bg-purple-100 text-purple-700",
-      Finishing: "bg-yellow-100 text-yellow-700",
-      "Siap Diambil": "bg-green-100 text-green-700",
-    };
-
-    async function loadDashboard() {
-      type Row = Transaction & { id: number; _customerName: string; _source: 'local' | 'remote' };
-
-      const [localTrx, localCustomers] = await Promise.all([
-        db.transaction.toArray(),
-        db.customer.toArray(),
-      ]);
-
-      const localCustomerMap = new Map(localCustomers.map(c => [c.id, c]));
-
-      // Start with all local records
-      const rows = new Map<string, Row>();
-
-      for (const t of localTrx) {
-        const key = `local-${t.id}`;
-        rows.set(key, {
-          ...t,
-          id: t.id!,
-          _customerName: localCustomerMap.get(t.customer_id)?.name ?? 'Pelanggan',
-          _source: 'local',
-        });
-      }
-
-      // Fetch Supabase and union — for synced local records, Supabase wins (has latest status)
-      if (navigator.onLine) {
-        const [{ data: remoteTrx }, { data: remoteCustomers }] = await Promise.all([
-          trx.from('transaction').select('*'),
-          trx.from('customer').select('*'),
-        ]);
-        const remoteCustomerMap = new Map((remoteCustomers as Customer[] ?? []).map(c => [c.id, c]));
-
-        for (const t of (remoteTrx as Transaction[] ?? [])) {
-          // Check if a local synced record corresponds to this Supabase record.
-          // Since Dexie IDs ≠ Supabase IDs, match by customer name + outfit_type + panjang_kain as fingerprint.
-          const customerName = remoteCustomerMap.get(t.customer_id)?.name ?? 'Pelanggan';
-          const matchingLocalKey = [...rows.entries()].find(([, r]) => {
-            return r._source === 'local' && r.synced &&
-              localCustomerMap.get(r.customer_id)?.name === customerName &&
-              r.outfit_type === t.outfit_type &&
-              r.panjang_kain === t.panjang_kain &&
-              r.panjang_badan === t.panjang_badan;
-          })?.[0];
-
-          if (matchingLocalKey) {
-            // Replace local copy with Supabase version (has latest status)
-            const localRow = rows.get(matchingLocalKey)!;
-            rows.delete(matchingLocalKey);
-            rows.set(`remote-${t.id}`, { ...t, id: t.id!, _customerName: customerName, _source: 'remote' });
-          } else {
-            // Supabase-only record (not in Dexie), add it
-            const existsRemote = [...rows.keys()].some(k => k.startsWith('remote-') && rows.get(k)!.id === t.id);
-            if (!existsRemote) {
-              rows.set(`remote-${t.id}`, { ...t, id: t.id!, _customerName: customerName, _source: 'remote' });
-            }
-          }
+        if (metricsSkeleton && metricsReal) {
+          metricsSkeleton.style.display = 'none';
+          metricsReal.style.display = 'block';
         }
-      }
 
-      const transactions = [...rows.values()];
-      const done = transactions.filter(t => t.status === "Siap Diambil");
-      const active = transactions.filter(t => t.status !== "Siap Diambil");
-
-      document.getElementById("total-orders")!.textContent = String(transactions.length);
-      document.getElementById("orders-active")!.textContent = String(active.length);
-      document.getElementById("orders-done")!.textContent = String(done.length);
-
-      const tbody = document.getElementById("orders-tbody")!;
-      if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Belum ada pesanan.</td></tr>`;
-        return;
-      }
-
-      const sorted = [...transactions].sort((a, b) => (b.id || 0) - (a.id || 0));
-      tbody.innerHTML = sorted
-        .map((t) => {
-          const colorClass = STATUS_COLORS[t.status] ?? "";
-          const currentIdx = STATUS_FLOW.indexOf(t.status as OrderStatus);
-          // Only show statuses from current status onward (forward-only)
-          const visibleStatuses = currentIdx >= 0 ? STATUS_FLOW.slice(currentIdx) : STATUS_FLOW;
-          const options = visibleStatuses.map(s =>
-            `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`
-          ).join('');
-
-          return `
-          <tr class="border-b last:border-0 hover:bg-slate-50 cursor-pointer" onclick="window.location.href='/order?id=${t.id}&src=${t._source}'">
-            <td class="py-3 font-medium text-slate-900">${t._customerName}</td>
-            <td class="py-3 text-slate-600">${t.outfit_type || 'Pakaian'}</td>
-            <td class="py-3 text-slate-500">Baru</td>
-            <td class="py-3">
-              <select data-id="${t.id}" data-source="${t._source}" class="status-select text-xs font-semibold px-2 py-1.5 rounded-full border-0 cursor-pointer ${colorClass}">
-                ${options}
-              </select>
-            </td>
-          </tr>`;
-        })
-        .join("");
-
-      // Add event listeners to status-select dropdowns
-      tbody.querySelectorAll<HTMLSelectElement>('.status-select').forEach(sel => {
-        sel.addEventListener('change', async (e) => {
-          e.stopPropagation();
-          const trId = Number(sel.dataset.id);
-          const source = sel.dataset.source;
-          const newStatus = sel.value as OrderStatus;
-
-          try {
-            if (source === 'local') {
-              await db.transaction.update(trId, { status: newStatus, synced: false });
-            }
-            if (navigator.onLine) {
-              await trx.from('transaction').update({ status: newStatus }).eq('id', trId);
-              if (source === 'local') {
-                await db.transaction.update(trId, { synced: true });
-              }
-            }
-            loadDashboard();
-          } catch (err) {
-            console.error("Error updating status on dashboard:", err);
-          }
-        });
-
-        // Prevent clicking/changing the dropdown from navigating to order details page
-        sel.addEventListener('click', (e) => {
-          e.stopPropagation();
-        });
-        sel.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-        });
-      });
-    }
-
-    loadDashboard();
+        if (tableSkeleton && tableReal) {
+          tableSkeleton.style.display = 'none';
+          tableReal.style.display = 'block';
+        }
+      }, 100);
+    });
   </script>
 </AdminLayout>

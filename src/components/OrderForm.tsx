@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { db, syncCustomer, syncPreset, syncTransaction, syncPending } from '@/li
 import type { Customer, PresetCustomer, Transaction } from '@/lib/db';
 import { toast } from 'sonner';
 import { trx } from '@/lib/supabase';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/currency';
 
 const outfitOptions = [
   'Jas',
@@ -93,6 +94,8 @@ interface FormState {
   paddingTebal: boolean;
   paddingTipis: boolean;
   kancing: boolean;
+  totalPrice: string;
+  amountPaid: string;
 }
 
 function isKemejaLenganPendek(outfit: string): boolean {
@@ -133,12 +136,61 @@ export default function OrderForm() {
     paddingTebal: false,
     paddingTipis: false,
     kancing: false,
+    totalPrice: '',
+    amountPaid: '',
   });
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [draftId, setDraftId] = useState<number | null>(null);
+  const [showRestoreDraft, setShowRestoreDraft] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<any>(null);
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
+  const skipCustomerEvent = useRef(false);
 
   const outfitTypeCategory = getOutfitType(formState.outfitType);
   const currentFields = getFieldsForOutfit(outfitTypeCategory);
+
+  // Auto-save draft (debounced 3 seconds)
+  useEffect(() => {
+    // Don't auto-save if form is empty
+    if (!formState.name && Object.keys(formState.measurements).length === 0) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const draftData = {
+          data: JSON.stringify(formState),
+          customer_name: formState.name || 'Draft',
+          outfit_type: formState.outfitType,
+          updated_at: new Date(),
+        };
+
+        if (draftId) {
+          // Update existing draft
+          await db.draft.update(draftId, draftData);
+        } else {
+          // Create new draft
+          const id = await db.draft.add(draftData);
+          setDraftId(id as number);
+        }
+      } catch (err) {
+        console.error('Failed to save draft:', err);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [formState, draftId]);
+
+  // Check for existing draft on mount
+  useEffect(() => {
+    async function checkDraft() {
+      const drafts = await db.draft.orderBy('updated_at').reverse().limit(1).toArray();
+      if (drafts.length > 0) {
+        setPendingDraft(drafts[0]);
+        setShowRestoreDraft(true);
+      }
+    }
+    checkDraft();
+  }, []);
 
   useEffect(() => {
     syncPending();
@@ -149,10 +201,37 @@ export default function OrderForm() {
   // Listen to customer-selected event
   useEffect(() => {
     const handleCustomerSelected = (e: Event) => {
-      const { isNew, customer, preset } = (e as CustomEvent).detail;
+      if (skipCustomerEvent.current) {
+        skipCustomerEvent.current = false;
+        return;
+      }
+      
+      const { isNew, customer, preset, typedName } = (e as CustomEvent).detail;
       
       if (isNew) {
-        resetForm();
+        // Reset form but keep the typed name (don't dispatch measurement-reset to preserve CustomerSearch input)
+        const nameToKeep = typedName || '';
+        setFormState({
+          selectedCustomerId: null,
+          selectedPresetId: null,
+          name: nameToKeep,
+          phone: '',
+          outfitType: 'Jas',
+          panjangKain: String(PANJANG_KAIN_DEFAULT['Jas']),
+          lebarKain: String(LEBAR_KAIN_DEFAULT['Jas']),
+          cuciSebelumPotong: false,
+          measurements: {},
+          catatan: '',
+          saveAsPreset: false,
+          presetName: '',
+          furing: false,
+          paddingTebal: false,
+          paddingTipis: false,
+          kancing: false,
+          totalPrice: '',
+          amountPaid: '',
+        });
+        setErrors([]);
         return;
       }
 
@@ -241,6 +320,8 @@ export default function OrderForm() {
       paddingTebal: false,
       paddingTipis: false,
       kancing: false,
+      totalPrice: '',
+      amountPaid: '',
     });
     setErrors([]);
     window.dispatchEvent(new CustomEvent('measurement-reset'));
@@ -359,19 +440,37 @@ export default function OrderForm() {
 
       // 3. Save transaction
       const status = formState.cuciSebelumPotong ? 'Cuci Bahan' : 'Potong Bahan';
+      const totalPrice = parseCurrencyInput(formState.totalPrice);
+      const amountPaid = parseCurrencyInput(formState.amountPaid);
+      
+      let paymentStatus: 'belum_bayar' | 'dp' | 'lunas' = 'belum_bayar';
+      if (amountPaid > 0) {
+        paymentStatus = amountPaid >= totalPrice ? 'lunas' : 'dp';
+      }
+      
       const newTrx: Transaction = {
         customer_id: customerId,
         preset_id: presetId ?? undefined,
         ...measurements,
         status,
+        total_price: totalPrice || undefined,
+        amount_paid: amountPaid || 0,
+        payment_status: paymentStatus,
+        created_at: new Date(),
         synced: false,
       };
-      const trxId = (await db.transaction.add(newTrx)) as number;
+      const trxId = (await db.transactions.add(newTrx)) as number;
       await syncTransaction(
         { ...newTrx, id: trxId },
         supabaseCustomerId ?? undefined,
         supabasePresetId
       );
+
+      // Clear draft on successful save
+      if (draftId) {
+        await db.draft.delete(draftId);
+        setDraftId(null);
+      }
 
       resetForm();
       window.dispatchEvent(new CustomEvent('order-success'));
@@ -381,8 +480,67 @@ export default function OrderForm() {
     }
   };
 
+  const handleRestoreDraft = () => {
+    if (pendingDraft) {
+      const restored = JSON.parse(pendingDraft.data);
+      
+      // Set flag to skip customer-selected event
+      skipCustomerEvent.current = true;
+      
+      setFormState(restored);
+      setDraftId(pendingDraft.id);
+      setShowRestoreDraft(false);
+      
+      // If draft has a registered customer, notify CustomerSearch
+      if (restored.selectedCustomerId) {
+        window.dispatchEvent(new CustomEvent('draft-restore', { detail: { name: restored.name } }));
+        setIsDraftRestored(false);
+      } else {
+        // New customer draft - use direct input mode
+        setIsDraftRestored(true);
+      }
+      
+      // Notify sketch
+      window.dispatchEvent(new CustomEvent('outfit-update', { detail: restored.outfitType }));
+      Object.entries(restored.measurements).forEach(([id, value]) => {
+        window.dispatchEvent(new CustomEvent('measurement-update', { detail: { id, value } }));
+      });
+      (window as any).__lastOutfit = restored.outfitType;
+      
+      toast.success('Draft dipulihkan');
+    }
+  };
+
+  const handleDiscardDraft = async () => {
+    if (pendingDraft?.id) {
+      await db.draft.delete(pendingDraft.id);
+    }
+    setShowRestoreDraft(false);
+    setPendingDraft(null);
+  };
+
   return (
     <div className="container mx-auto space-y-6">
+      {/* Draft Restore Dialog */}
+      {showRestoreDraft && (
+        <Alert className="border-blue-500 bg-blue-50">
+          <AlertTitle>Draft Ditemukan</AlertTitle>
+          <AlertDescription>
+            <p className="mb-3">
+              Pesanan terakhir untuk <strong>{pendingDraft?.customer_name}</strong> ({pendingDraft?.outfit_type}) belum selesai.
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={handleRestoreDraft} size="sm" variant="default">
+                Lanjutkan Draft
+              </Button>
+              <Button onClick={handleDiscardDraft} size="sm" variant="outline">
+                Mulai Baru
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Alert>
         <AlertTitle>Tips Tablet!</AlertTitle>
         <AlertDescription>
@@ -404,7 +562,16 @@ export default function OrderForm() {
                     <Label>
                       Nama Pelanggan<span className="text-red-500">*</span>
                     </Label>
-                    <CustomerSearch />
+                    {isDraftRestored ? (
+                      <Input
+                        value={formState.name}
+                        onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Nama pelanggan"
+                        className="h-12 text-base border-2"
+                      />
+                    ) : (
+                      <CustomerSearch />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>No. HP / WA</Label>
@@ -423,7 +590,7 @@ export default function OrderForm() {
                   </Label>
                   <Combobox
                     items={outfitOptions}
-                    defaultValue="Jas"
+                    value={formState.outfitType}
                     placeholder="Pilih jenis pakaian"
                     className="h-12 border-2"
                     showClear={false}
@@ -468,6 +635,48 @@ export default function OrderForm() {
                       onCheckedChange={(checked) => setFormState(prev => ({ ...prev, cuciSebelumPotong: checked === true }))}
                     />
                   </div>
+                </div>
+              </div>
+
+              <hr />
+
+              {/* Payment fields */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Total Harga (Rp)</Label>
+                  <Input
+                    value={formState.totalPrice}
+                    onChange={(e) => {
+                      const formatted = formatCurrencyInput(e.target.value);
+                      setFormState(prev => ({ ...prev, totalPrice: formatted }));
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    className="h-12 border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Uang Muka / DP (Rp)</Label>
+                  <Input
+                    value={formState.amountPaid}
+                    onChange={(e) => {
+                      const formatted = formatCurrencyInput(e.target.value);
+                      setFormState(prev => ({ ...prev, amountPaid: formatted }));
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    className="h-12 border-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sisa Pembayaran (Rp)</Label>
+                  <Input
+                    value={formatCurrencyInput(String(Math.max(0, parseCurrencyInput(formState.totalPrice) - parseCurrencyInput(formState.amountPaid))))}
+                    disabled
+                    className="h-12 border-2 bg-slate-50"
+                  />
                 </div>
               </div>
 

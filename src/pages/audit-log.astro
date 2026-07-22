@@ -1,0 +1,8 @@
+---
+import AdminLayout from "@/layouts/adminLayout.astro";
+import AuditLogList from "@/components/AuditLogList";
+---
+
+<AdminLayout title="Audit Log">
+  <AuditLogList client:only="react" />
+</AdminLayout>

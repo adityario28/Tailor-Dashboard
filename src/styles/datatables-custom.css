@@ -1,0 +1,287 @@
+/* ── DataTables custom skin to match shadcn/Tailwind design ── */
+
+/* Wrapper — ensure full width */
+.dt-container {
+  font-size: 0.875rem;
+  color: #1e293b;
+  width: 100%;
+}
+
+.dt-layout-table {
+  width: 100%;
+}
+
+/* Only the table cell should be full width — not search/pagination cells */
+.dt-layout-cell.dt-layout-full {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Layout: search left, length right on top; info left, pagination right on bottom */
+.dt-layout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.dt-layout-row:last-child {
+  margin-bottom: 0;
+  margin-top: 0.75rem;
+}
+
+/* Search input */
+.dt-search input {
+  height: 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  background: #ffffff;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 220px;
+}
+.dt-search input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+.dt-search label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Length select */
+.dt-length select {
+  height: 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0 2rem 0 0.75rem;
+  font-size: 0.875rem;
+  background: #ffffff;
+  color: #1e293b;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  outline: none;
+  cursor: pointer;
+}
+.dt-length select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+.dt-length label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Info text */
+.dt-info {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+/* Table */
+table.dataTable {
+  width: 100% !important;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+table.dataTable thead th,
+table.dataTable thead td {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+table.dataTable thead th:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Sort icons */
+table.dataTable thead th.dt-orderable-asc,
+table.dataTable thead th.dt-orderable-desc {
+  padding-right: 1.75rem;
+  position: relative;
+}
+table.dataTable thead th .dt-column-order {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+table.dataTable thead th .dt-column-order::before,
+table.dataTable thead th .dt-column-order::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+table.dataTable thead th .dt-column-order::before {
+  border-bottom: 4px solid #cbd5e1;
+}
+table.dataTable thead th .dt-column-order::after {
+  border-top: 4px solid #cbd5e1;
+}
+table.dataTable thead th.dt-ordering-asc .dt-column-order::before {
+  border-bottom-color: #6366f1;
+}
+table.dataTable thead th.dt-ordering-desc .dt-column-order::after {
+  border-top-color: #6366f1;
+}
+
+table.dataTable tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+table.dataTable tbody tr:last-child {
+  border-bottom: none;
+}
+table.dataTable tbody tr:hover > * {
+  background: #f8fafc;
+}
+
+table.dataTable tbody td {
+  padding: 0.75rem 1rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+/* Child row */
+table.dataTable tbody tr.dt-hasChild > td {
+  background: #f8fafc;
+}
+table.dataTable tbody tr.dt-hasChild > td:first-child::before {
+  display: none;
+}
+table.dataTable tr.dt-child-row td {
+  padding: 0;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Expand toggle button */
+.dt-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: #e0e7ff;
+  color: #6366f1;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dt-expand-btn:hover {
+  background: #c7d2fe;
+}
+.dt-expand-btn.open {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+/* Pagination */
+.dt-paging {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.dt-paging .dt-paging-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dt-paging .dt-paging-button:hover:not(.disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+.dt-paging .dt-paging-button.current {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+.dt-paging .dt-paging-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Child row inner table */
+.dt-child-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.dt-child-table th {
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+.dt-child-table td {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dt-child-table tr:last-child td {
+  border-bottom: none;
+}
+.dt-child-table td.font-medium {
+  color: #1e293b;
+  font-weight: 500;
+}
+.dt-child-table td.text-right {
+  text-align: right;
+}
+.dt-child-table tfoot td {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  text-align: right;
+}

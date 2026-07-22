@@ -1,0 +1,7 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import CustomerList from '@/components/CustomerList';
+---
+<AdminLayout title="Pelanggan">
+  <CustomerList client:only="react" />
+</AdminLayout>

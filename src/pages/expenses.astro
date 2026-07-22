@@ -1,0 +1,7 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import ExpenseForm from '@/components/ExpenseForm';
+---
+<AdminLayout title="Pengeluaran">
+  <ExpenseForm client:only="react" />
+</AdminLayout>
