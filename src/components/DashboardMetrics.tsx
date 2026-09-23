@@ -12,24 +12,47 @@ export default function DashboardMetrics() {
     updateMetrics();
   }, []);
 
-  const updateMetrics = async () => {
-    setLoading(true);
+  const updateMetrics = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      const [localTrx] = await Promise.all([db.transactions.toArray()]);
-      let allTransactions = localTrx;
+      const [localTrx, localGroupMembers] = await Promise.all([
+        db.transactions.toArray(),
+        db.group_member.toArray(),
+      ]);
+      let allItems: any[] = [];
 
       if (navigator.onLine) {
-        const { data: remoteTrx } = await trx.from('transaction').select('*');
+        const [{ data: remoteTrx }, { data: remoteGroupMembers }] = await Promise.all([
+          trx.from('transaction').select('*'),
+          trx.from('group_member').select('*'),
+        ]);
+        
+        // Merge transactions
         if (remoteTrx) {
-          allTransactions = [...localTrx, ...(remoteTrx as any[])];
+          const remoteIds = new Set(remoteTrx.map((t: any) => t.id));
+          const unsyncedLocal = localTrx.filter(t => !t.synced && !remoteIds.has(t.id));
+          allItems = [...remoteTrx, ...unsyncedLocal];
+        } else {
+          allItems = [...localTrx];
         }
+
+        // Merge group members
+        if (remoteGroupMembers) {
+          const remoteIds = new Set(remoteGroupMembers.map((m: any) => m.id));
+          const unsyncedLocal = localGroupMembers.filter(m => !m.synced && !remoteIds.has(m.id));
+          allItems = [...allItems, ...remoteGroupMembers, ...unsyncedLocal];
+        } else {
+          allItems = [...allItems, ...localGroupMembers];
+        }
+      } else {
+        allItems = [...localTrx, ...localGroupMembers];
       }
 
-      const done = allTransactions.filter(t => t.status === "Siap Diambil");
-      const active = allTransactions.filter(t => t.status !== "Siap Diambil");
+      const done = allItems.filter(t => t.status === "Selesai");
+      const active = allItems.filter(t => t.status !== "Selesai");
 
       setMetrics({
-        total: allTransactions.length,
+        total: allItems.length,
         active: active.length,
         done: done.length,
       });
@@ -37,6 +60,8 @@ export default function DashboardMetrics() {
       console.error(err);
     } finally {
       setLoading(false);
+      // Signal Astro to swap skeleton
+      window.dispatchEvent(new CustomEvent('metrics-ready'));
     }
   };
 
@@ -75,7 +100,7 @@ export default function DashboardMetrics() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-slate-500">
-            Siap Diambil
+            Selesai
           </CardTitle>
         </CardHeader>
         <CardContent>

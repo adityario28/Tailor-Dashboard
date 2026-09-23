@@ -5,6 +5,7 @@ interface Props {
 const { title } = Astro.props;
 import '@/styles/global.css';
 import { Toaster } from '@/components/ui/sonner';
+import SyncStatus from '@/components/SyncStatus';
 
 const pathname = Astro.url.pathname.replace(/\/$/, '') || '/dashboard';
 const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
@@ -17,10 +18,27 @@ const navClass = (href: string) =>
   }`;
 ---
 <html lang="en">
-  <head></head>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
   <body class="bg-slate-50 text-slate-900 antialiased">
     <div class="flex min-h-screen">
-      <aside id="sidebar" class="relative w-64 bg-white border-r hidden md:flex flex-col sticky top-0 h-screen transition-[width] duration-300 overflow-hidden">
+      {/* Mobile header bar */}
+      <div id="mobile-header" class="fixed top-0 left-0 right-0 z-40 flex items-center h-14 px-4 bg-white border-b md:hidden">
+        <button
+          id="mobile-menu-btn"
+          class="flex items-center justify-center w-10 h-10 rounded-md text-slate-600 hover:bg-slate-100"
+          aria-label="Open menu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+        <span class="ml-3 text-lg font-bold text-indigo-600">Tailor App</span>
+      </div>
+
+      {/* Mobile backdrop */}
+      <div id="mobile-backdrop" class="fixed inset-0 z-40 bg-black/40 hidden md:hidden" aria-hidden="true"></div>
+
+      <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r flex flex-col h-screen transition-transform duration-300 -translate-x-full md:translate-x-0 md:relative md:sticky md:top-0 overflow-hidden">
 
         {/* Header: logo + toggle button */}
         <div class="flex items-center justify-between px-4 h-16 border-b shrink-0">
@@ -48,6 +66,14 @@ const navClass = (href: string) =>
             <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span class="nav-label whitespace-nowrap">Customers</span>
           </a>
+          <a href="/workers" class={navClass('/workers')}>
+            <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+            <span class="nav-label whitespace-nowrap">Penjahit</span>
+          </a>
+          <a href="/worker-salary" class={navClass('/worker-salary')}>
+            <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <span class="nav-label whitespace-nowrap">Gaji Penjahit</span>
+          </a>
           <a href="/materials" class={navClass('/materials')}>
             <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
             <span class="nav-label whitespace-nowrap">Bahan & Stok</span>
@@ -63,15 +89,25 @@ const navClass = (href: string) =>
         </nav>
 
         {/* Bottom menu */}
-        <div class="px-2 pb-4 border-t pt-4 mt-auto">
-          <a href="/audit-log" class={navClass('/audit-log')}>
+        <div class="px-2 pb-4 mt-auto">
+          <SyncStatus client:only="react" />
+          <div class="border-t pt-4">
+            <a href="/audit-log" class={navClass('/audit-log')}>
             <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
             <span class="nav-label whitespace-nowrap">Audit Log</span>
+          </a>
+          <a href="/notification-log" class={navClass('/notification-log')}>
+            <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.55 3.18 2 2 0 0 1 3.54 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span class="nav-label whitespace-nowrap">Log Notifikasi</span>
+          </a>
+          <a href="/settings" class={navClass('/settings')}>
+            <svg class="shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="nav-label whitespace-nowrap">Pengaturan</span>
           </a>
         </div>
       </aside>
 
-      <main class="flex-1 p-4 md:p-10">
+      <main class="flex-1 min-w-0 p-3 pt-[70px] sm:p-6 sm:pt-[70px] md:p-10 md:pt-10">
         <div class="max-w-6xl mx-auto">
           <slot />
         </div>
@@ -82,20 +118,30 @@ const navClass = (href: string) =>
       const sidebar = document.getElementById('sidebar')!;
       const title = document.getElementById('sidebar-title')!;
       const labels = sidebar.querySelectorAll<HTMLElement>('.nav-label');
+      const backdrop = document.getElementById('mobile-backdrop')!;
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn')!;
 
+      // ─── Desktop: collapse/expand ─────────────────────────────────────
       function applyCollapsed(collapsed: boolean) {
-        if (collapsed) {
-          sidebar.style.width = '56px';
-          title.style.display = 'none';
-          labels.forEach(el => el.style.display = 'none');
+        // Only apply width changes on desktop (md+)
+        if (window.innerWidth >= 768) {
+          if (collapsed) {
+            sidebar.style.width = '56px';
+            title.style.display = 'none';
+            labels.forEach(el => el.style.display = 'none');
+          } else {
+            sidebar.style.width = '256px';
+            title.style.display = '';
+            labels.forEach(el => el.style.display = '');
+          }
         } else {
-          sidebar.style.width = '256px';
+          // Reset inline styles on mobile
+          sidebar.style.width = '';
           title.style.display = '';
           labels.forEach(el => el.style.display = '');
         }
       }
 
-      // Restore persisted state immediately (no transition flash)
       let collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
       applyCollapsed(collapsed);
 
@@ -103,6 +149,42 @@ const navClass = (href: string) =>
         collapsed = !collapsed;
         localStorage.setItem('sidebar-collapsed', String(collapsed));
         applyCollapsed(collapsed);
+        window.dispatchEvent(new CustomEvent('sidebar-collapse-change', { detail: collapsed }));
+      });
+
+      // ─── Mobile: open/close sidebar ───────────────────────────────────
+      function openMobileSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        backdrop.classList.remove('hidden');
+      }
+
+      function closeMobileSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('translate-x-0');
+        backdrop.classList.add('hidden');
+      }
+
+      mobileMenuBtn.addEventListener('click', openMobileSidebar);
+      backdrop.addEventListener('click', closeMobileSidebar);
+
+      // Close sidebar when a nav link is clicked (mobile)
+      sidebar.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth < 768) closeMobileSidebar();
+        });
+      });
+
+      // Handle resize: reset mobile state when switching to desktop
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+          closeMobileSidebar();
+          applyCollapsed(collapsed);
+        } else {
+          sidebar.style.width = '';
+          title.style.display = '';
+          labels.forEach(el => el.style.display = '');
+        }
       });
     </script>
     <Toaster client:only="react" />

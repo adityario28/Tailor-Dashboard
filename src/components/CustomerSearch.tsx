@@ -48,17 +48,20 @@ export default function CustomerSearch() {
   async function search(q: string) {
     const lower = q.toLowerCase();
 
-    // Dexie: filter all customers by name containing query
+    // Dexie: filter all customers by name or tag containing query
     const local = (await db.customer.toArray()) as CustomerWithId[];
-    const localMatches = local.filter(c => c.name.toLowerCase().includes(lower));
+    const localMatches = local.filter(c => 
+      c.name.toLowerCase().includes(lower) || 
+      (c.tag && c.tag.toLowerCase().includes(lower))
+    );
 
-    // Supabase: ilike search
+    // Supabase: ilike search on name or tag
     let remoteMatches: CustomerWithId[] = [];
     if (navigator.onLine) {
       const { data } = await trx
         .from('customer')
         .select('*')
-        .ilike('name', `%${q}%`)
+        .or(`name.ilike.%${q}%,tag.ilike.%${q}%`)
         .limit(10);
       if (data) remoteMatches = data as CustomerWithId[];
     }
@@ -85,10 +88,11 @@ export default function CustomerSearch() {
       } else {
         const newLocalId = await db.customer.add({
           name: c.name,
+          tag: c.tag,
           phone: c.phone,
           synced: true,
         });
-        localCustomer = { id: newLocalId, name: c.name, phone: c.phone, synced: true, _source: 'local' } as CustomerWithId & { _source: 'local' };
+        localCustomer = { id: newLocalId, name: c.name, tag: c.tag, phone: c.phone, synced: true, _source: 'local' } as CustomerWithId & { _source: 'local' };
       }
     }
 
@@ -150,6 +154,7 @@ export default function CustomerSearch() {
                 className="px-4 py-3 cursor-pointer hover:bg-indigo-50 border-b last:border-0"
               >
                 <span className="font-medium">{c.name}</span>
+                {c.tag && <span className="ml-2 text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{c.tag}</span>}
                 {c.phone && <span className="ml-2 text-sm text-slate-500">{c.phone}</span>}
               </li>
             ))}

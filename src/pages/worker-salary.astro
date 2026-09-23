@@ -1,0 +1,8 @@
+---
+import AdminLayout from "@/layouts/adminLayout.astro";
+import WorkerSalary from "@/components/WorkerSalary";
+---
+
+<AdminLayout title="Gaji Penjahit">
+  <WorkerSalary client:only="react" />
+</AdminLayout>

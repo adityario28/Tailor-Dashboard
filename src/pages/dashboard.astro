@@ -9,108 +9,124 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 <AdminLayout title="Dashboard">
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-extrabold tracking-tight text-slate-950">
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950">
           Dashboard
         </h1>
         <p class="text-slate-500 mt-1">Selamat datang di Tailor App</p>
       </div>
-      <a href="/new-order">
-        <Button
-          className="h-12 px-6 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 gap-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+      <div class="flex gap-2 self-start sm:self-auto">
+        <a href="/new-group-order">
+          <Button
+            variant="outline"
+            className="h-12 px-4 text-base font-semibold gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
           >
-            <path d="M12 5v14M5 12h14"></path>
-          </svg>
-          Tambah Pesanan
-        </Button>
-      </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Pesanan Grup
+          </Button>
+        </a>
+        <a href="/new-order">
+          <Button
+            className="h-12 px-6 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            Tambah Pesanan
+          </Button>
+        </a>
+      </div>
     </div>
 
-    <!-- Skeleton placeholder for metrics (shows immediately) -->
-    <div id="metrics-skeleton" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Astro skeleton for metrics (shows until React has data) -->
+    <div id="metrics-skeleton" class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4">
       <Card>
         <CardHeader>
-          <CardTitle class="text-sm font-medium text-slate-500">
-            Total Pesanan
-          </CardTitle>
+          <CardTitle class="text-sm font-medium text-slate-500">Total Pesanan</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-16" />
-        </CardContent>
+        <CardContent><Skeleton className="h-10 w-16" /></CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle class="text-sm font-medium text-slate-500">
-            Sedang Dikerjakan
-          </CardTitle>
+          <CardTitle class="text-sm font-medium text-slate-500">Sedang Dikerjakan</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-16" />
-        </CardContent>
+        <CardContent><Skeleton className="h-10 w-16" /></CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle class="text-sm font-medium text-slate-500">
-            Siap Diambil
-          </CardTitle>
+          <CardTitle class="text-sm font-medium text-slate-500">Selesai</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-16" />
-        </CardContent>
+        <CardContent><Skeleton className="h-10 w-16" /></CardContent>
       </Card>
     </div>
-
-    <!-- React component (hidden until loaded, then replaces skeleton) -->
-    <div id="metrics-real" style="display: none;">
+    <!-- React metrics (hidden until data ready) -->
+    <div id="metrics-react" style="display: none;">
       <DashboardMetrics client:only="react" />
     </div>
 
-    <!-- Skeleton for table -->
-    <Card id="table-skeleton">
+    <!-- Astro skeleton for table (shows until React has data) -->
+    <Card id="table-skeleton" className="overflow-hidden">
       <CardHeader><CardTitle>Daftar Pesanan</CardTitle></CardHeader>
-      <CardContent>
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b text-slate-500 text-left">
-              <th class="pb-3 font-medium">Nama Pelanggan</th>
-              <th class="pb-3 font-medium">Jenis</th>
-              <th class="pb-3 font-medium">Tanggal</th>
-              <th class="pb-3 font-medium">Status Pembayaran</th>
-              <th class="pb-3 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, i) => (
-              <tr key={i} class="border-b">
-                <td class="py-3"><Skeleton className="h-5 w-32" /></td>
-                <td class="py-3"><Skeleton className="h-5 w-40" /></td>
-                <td class="py-3"><Skeleton className="h-5 w-28" /></td>
-                <td class="py-3"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                <td class="py-3"><Skeleton className="h-6 w-24 rounded-full" /></td>
+      <CardContent className="p-0">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm min-w-[700px]">
+            <thead>
+              <tr class="border-b text-slate-500 text-left">
+                <th class="pb-3 pl-4 sm:pl-6 font-medium">Nama Pelanggan</th>
+                <th class="pb-3 font-medium">Jenis</th>
+                <th class="pb-3 font-medium">Penjahit</th>
+                <th class="pb-3 font-medium">Tanggal Order</th>
+                <th class="pb-3 font-medium">Status Bayar</th>
+                <th class="pb-3 pr-4 sm:pr-6 font-medium">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {[...Array(5)].map((_, i) => (
+                <tr class="border-b">
+                  <td class="py-3 pl-4 sm:pl-6"><Skeleton className="h-5 w-32" /></td>
+                  <td class="py-3"><Skeleton className="h-5 w-24" /></td>
+                  <td class="py-3"><Skeleton className="h-5 w-20" /></td>
+                  <td class="py-3"><Skeleton className="h-5 w-28" /></td>
+                  <td class="py-3"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  <td class="py-3 pr-4 sm:pr-6"><Skeleton className="h-6 w-24 rounded-full" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
-
-    <!-- React table (hidden until loaded) -->
-    <div id="table-real" style="display: none;">
-      <Card>
+    <!-- React table (hidden until data ready) -->
+    <div id="table-react" style="display: none;">
+      <Card className="overflow-hidden">
         <CardHeader><CardTitle>Daftar Pesanan</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <OrdersTable client:only="react" />
         </CardContent>
       </Card>
@@ -118,25 +134,14 @@ import { Skeleton } from "@/components/ui/skeleton";
   </div>
 
   <script>
-    // Show React components and hide skeletons once loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      // Wait a bit for React to hydrate
-      setTimeout(() => {
-        const metricsSkeleton = document.getElementById('metrics-skeleton');
-        const metricsReal = document.getElementById('metrics-real');
-        const tableSkeleton = document.getElementById('table-skeleton');
-        const tableReal = document.getElementById('table-real');
-
-        if (metricsSkeleton && metricsReal) {
-          metricsSkeleton.style.display = 'none';
-          metricsReal.style.display = 'block';
-        }
-
-        if (tableSkeleton && tableReal) {
-          tableSkeleton.style.display = 'none';
-          tableReal.style.display = 'block';
-        }
-      }, 100);
+    // Swap Astro skeletons with React components when data is ready
+    window.addEventListener('metrics-ready', () => {
+      document.getElementById('metrics-skeleton')?.style.setProperty('display', 'none');
+      document.getElementById('metrics-react')?.style.setProperty('display', 'block');
+    });
+    window.addEventListener('table-ready', () => {
+      document.getElementById('table-skeleton')?.style.setProperty('display', 'none');
+      document.getElementById('table-react')?.style.setProperty('display', 'block');
     });
   </script>
 </AdminLayout>

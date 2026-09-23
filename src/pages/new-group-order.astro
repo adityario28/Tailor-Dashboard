@@ -1,0 +1,8 @@
+---
+import AdminLayout from "@/layouts/adminLayout.astro";
+import GroupOrderForm from "@/components/GroupOrderForm";
+---
+
+<AdminLayout title="Pesanan Grup Baru">
+  <GroupOrderForm client:only="react" />
+</AdminLayout>

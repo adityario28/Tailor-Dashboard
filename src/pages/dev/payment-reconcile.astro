@@ -1,0 +1,8 @@
+---
+import AdminLayout from "@/layouts/adminLayout.astro";
+import PaymentReconcile from "@/components/PaymentReconcile";
+---
+
+<AdminLayout title="Payment Reconciliation | Dev">
+  <PaymentReconcile client:only="react" />
+</AdminLayout>

@@ -212,7 +212,12 @@ function CustomerCard({
             <User className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-slate-900 truncate">{customer.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-slate-900 truncate">{customer.name}</p>
+              {customer.tag && (
+                <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{customer.tag}</span>
+              )}
+            </div>
             {customer.phone && (
               <p className="text-xs text-slate-400">{customer.phone}</p>
             )}
@@ -394,6 +399,7 @@ export default function CustomerList() {
     const result = q
       ? customers.filter(c =>
           c.name.toLowerCase().includes(q) ||
+          (c.tag ?? '').toLowerCase().includes(q) ||
           (c.phone ?? '').includes(q)
         )
       : customers;
@@ -420,7 +426,7 @@ export default function CustomerList() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
-                placeholder="Cari nama atau nomor telepon..."
+                placeholder="Cari nama, tag, atau nomor telepon..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-9"

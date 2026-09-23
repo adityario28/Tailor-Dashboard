@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { db } from '@/lib/db';
 import { trx } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/currency';
@@ -339,8 +339,8 @@ export default function ExpenseHistory() {
         </div>
 
         {/* Toolbar: search + sort left, page size right */}
-        <div className="flex items-center justify-between gap-3 px-6 py-3 border-b bg-slate-50/50">
-          <div className="flex items-center gap-2 w-full max-w-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b bg-slate-50/50">
+          <div className="flex items-center gap-2 w-full sm:max-w-sm">
             <div className="relative flex-1">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -369,7 +369,8 @@ export default function ExpenseHistory() {
         </div>
 
         {/* Table */}
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[550px]">
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
               <TableHead className="w-12 px-4"></TableHead>
@@ -388,8 +389,8 @@ export default function ExpenseHistory() {
               </TableRow>
             ) : (
               paginated.map(row => (
-                <>
-                  <TableRow key={row.id} className={expanded.has(row.id) ? 'bg-slate-50' : ''}>
+                <Fragment key={row.id}>
+                  <TableRow className={expanded.has(row.id) ? 'bg-slate-50' : ''}>
                     <TableCell className="px-4 w-12">
                       <button
                         onClick={() => toggleExpand(row.id)}
@@ -430,6 +431,9 @@ export default function ExpenseHistory() {
                               <span className="ml-2 normal-case font-normal text-slate-400">({row.notes})</span>
                             )}
                           </p>
+
+                          {/* Desktop table */}
+                          <div className="hidden sm:block">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b">
@@ -458,15 +462,38 @@ export default function ExpenseHistory() {
                               </tr>
                             </tfoot>
                           </table>
+                          </div>
+
+                          {/* Mobile stacked cards */}
+                          <div className="sm:hidden space-y-3">
+                            {row.items.map((item, i) => (
+                              <div key={i} className="rounded-lg border bg-white p-3 space-y-1.5">
+                                <p className="font-medium text-slate-900 text-sm">{item.material_name}</p>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                  <div className="text-slate-400">Jumlah</div>
+                                  <div className="text-right text-slate-700 font-medium">{item.quantity} {item.unit}</div>
+                                  <div className="text-slate-400">Harga/Satuan</div>
+                                  <div className="text-right text-slate-700 font-medium">{formatCurrency(item.unit_price)}</div>
+                                  <div className="text-slate-400">Subtotal</div>
+                                  <div className="text-right text-indigo-600 font-semibold">{formatCurrency(item.subtotal)}</div>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="flex items-center justify-between pt-2 border-t">
+                              <span className="text-xs font-semibold text-slate-400 uppercase">Total</span>
+                              <span className="font-bold text-indigo-600">{formatCurrency(row.total)}</span>
+                            </div>
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               ))
             )}
           </TableBody>
         </Table>
+        </div>
 
         {/* Pagination footer */}
         <div className="flex items-center justify-between px-6 py-3 border-t bg-slate-50/50">

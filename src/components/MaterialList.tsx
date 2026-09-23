@@ -56,6 +56,7 @@ const EMPTY_FORM = {
   current_stock: '',
   avg_cost_per_unit: '',
   low_stock_threshold: '1',
+  is_special_order: false,
 };
 
 export default function MaterialList() {
@@ -130,6 +131,7 @@ export default function MaterialList() {
       current_stock: String(m.current_stock),
       avg_cost_per_unit: String(m.avg_cost_per_unit),
       low_stock_threshold: String(m.low_stock_threshold),
+      is_special_order: m.is_special_order ?? false,
     });
     setShowModal(true);
   }
@@ -146,7 +148,8 @@ export default function MaterialList() {
         unit: form.unit,
         current_stock: parseFloat(form.current_stock) || 0,
         avg_cost_per_unit: parseFloat(form.avg_cost_per_unit) || 0,
-        low_stock_threshold: parseFloat(form.low_stock_threshold) || 1,
+        low_stock_threshold: form.is_special_order ? 0 : (parseFloat(form.low_stock_threshold) || 1),
+        is_special_order: form.is_special_order,
         synced: false,
       };
 
@@ -202,7 +205,7 @@ export default function MaterialList() {
     }
   }
 
-  const lowStockCount = materials.filter(m => m.current_stock <= m.low_stock_threshold).length;
+  const lowStockCount = materials.filter(m => !m.is_special_order && m.current_stock <= m.low_stock_threshold).length;
 
   const processed = useMemo(() => {
     let data = materials;
@@ -264,7 +267,7 @@ export default function MaterialList() {
           <div>
             <p className="text-sm font-semibold text-red-700">Stok menipis</p>
             <p className="text-sm text-red-600">
-              {materials.filter(m => m.current_stock <= m.low_stock_threshold).map(m => m.name).join(', ')} perlu segera diisi ulang.
+              {materials.filter(m => !m.is_special_order && m.current_stock <= m.low_stock_threshold).map(m => m.name).join(', ')} perlu segera diisi ulang.
             </p>
           </div>
         </div>
@@ -273,8 +276,8 @@ export default function MaterialList() {
       {/* Table card */}
       <Card>
         {/* Toolbar */}
-        <div className="flex items-center justify-between gap-3 px-6 py-3 border-b bg-slate-50/50">
-          <div className="flex items-center gap-2 w-full max-w-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b bg-slate-50/50">
+          <div className="flex items-center gap-2 w-full sm:max-w-sm">
             <div className="relative flex-1">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -309,7 +312,8 @@ export default function MaterialList() {
             </div>
           ) : (
             <>
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[650px]">
                 <TableHeader>
                   <TableRow className="bg-slate-50 hover:bg-slate-50">
                     <TableHead className="px-4">Nama Bahan</TableHead>
@@ -329,10 +333,15 @@ export default function MaterialList() {
                     </TableRow>
                   ) : (
                     paginated.map(m => {
-                      const isLow = m.current_stock <= m.low_stock_threshold;
+                      const isLow = !m.is_special_order && m.current_stock <= m.low_stock_threshold;
                       return (
                         <TableRow key={m.id}>
-                          <TableCell className="px-4 font-medium text-slate-900">{m.name}</TableCell>
+                          <TableCell className="px-4 font-medium text-slate-900">
+                            {m.name}
+                            {m.is_special_order && (
+                              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Khusus</span>
+                            )}
+                          </TableCell>
                           <TableCell className="px-4 text-slate-500 capitalize">{m.unit}</TableCell>
                           <TableCell className="px-4 text-right">
                             <span className={`inline-flex items-center gap-1.5 font-semibold ${isLow ? 'text-red-600' : 'text-slate-800'}`}>
@@ -364,6 +373,7 @@ export default function MaterialList() {
                   )}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Pagination footer */}
               <div className="flex items-center justify-between px-6 py-3 border-t bg-slate-50/50">
@@ -422,7 +432,20 @@ export default function MaterialList() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer select-none hover:bg-slate-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={form.is_special_order}
+                onChange={e => setForm(f => ({ ...f, is_special_order: e.target.checked }))}
+                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <p className="text-sm font-medium text-slate-700">Bahan Khusus Order</p>
+                <p className="text-xs text-slate-400">Bahan yang dibeli khusus untuk 1 pesanan, tidak disimpan di stok reguler.</p>
+              </div>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Stok Awal</Label>
                 <Input
@@ -435,18 +458,20 @@ export default function MaterialList() {
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Batas Minimum Stok</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  value={form.low_stock_threshold}
-                  onChange={e => setForm(f => ({ ...f, low_stock_threshold: e.target.value }))}
-                  placeholder="1"
-                  className="h-11"
-                />
-              </div>
+              {!form.is_special_order && (
+                <div className="space-y-2">
+                  <Label>Batas Minimum Stok</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    value={form.low_stock_threshold}
+                    onChange={e => setForm(f => ({ ...f, low_stock_threshold: e.target.value }))}
+                    placeholder="1"
+                    className="h-11"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

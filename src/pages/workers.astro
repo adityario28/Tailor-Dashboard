@@ -1,0 +1,7 @@
+---
+import AdminLayout from '@/layouts/adminLayout.astro';
+import WorkerList from '@/components/WorkerList';
+---
+<AdminLayout title="Penjahit">
+  <WorkerList client:only="react" />
+</AdminLayout>

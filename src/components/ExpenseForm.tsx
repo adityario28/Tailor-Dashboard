@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import MaterialCombobox from '@/components/MaterialCombobox';
 import { toast } from 'sonner';
 import { formatCurrency, formatCurrencyInput, parseCurrencyInput } from '@/lib/currency';
 
@@ -322,49 +323,48 @@ export default function ExpenseForm() {
             {rows.map((row, idx) => (
               <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_160px_36px] gap-3 items-center p-3 sm:p-0 bg-slate-50 sm:bg-transparent rounded-lg sm:rounded-none">
                 {/* Material select */}
-                <Select
-                  value={row.material_id ? String(row.material_id) : ''}
-                  onValueChange={v => updateRow(idx, 'material_id', Number(v))}
-                >
-                  <SelectTrigger className="h-11 bg-white">
-                    <SelectValue placeholder="Pilih bahan..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {materials.map(m => (
-                      <SelectItem key={m.id} value={String(m.id)}>
-                        {m.name}
-                        <span className="ml-1 text-slate-400 text-xs">({m.unit})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <span className="sm:hidden text-xs text-slate-400 font-medium mb-1 block">Bahan</span>
+                  <MaterialCombobox
+                    materials={materials}
+                    value={row.material_id}
+                    onValueChange={v => updateRow(idx, 'material_id', v)}
+                    onMaterialCreated={(m) => setMaterials(prev => [...prev, m].sort((a, b) => a.name.localeCompare(b.name)))}
+                  />
+                </div>
 
                 {/* Quantity */}
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  value={row.quantity}
-                  onChange={e => updateRow(idx, 'quantity', e.target.value)}
-                  placeholder="0"
-                  className="h-11 bg-white"
-                />
+                <div>
+                  <span className="sm:hidden text-xs text-slate-400 font-medium mb-1 block">Jumlah</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    value={row.quantity}
+                    onChange={e => updateRow(idx, 'quantity', e.target.value)}
+                    placeholder="0"
+                    className="h-11 bg-white"
+                  />
+                </div>
 
                 {/* Unit price */}
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={row.unit_price}
-                  onChange={e => updateRow(idx, 'unit_price', formatCurrencyInput(e.target.value))}
-                  placeholder="0"
-                  className="h-11 bg-white"
-                />
+                <div>
+                  <span className="sm:hidden text-xs text-slate-400 font-medium mb-1 block">Harga / Satuan (Rp)</span>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={row.unit_price}
+                    onChange={e => updateRow(idx, 'unit_price', formatCurrencyInput(e.target.value))}
+                    placeholder="0"
+                    className="h-11 bg-white"
+                  />
+                </div>
 
                 {/* Remove row */}
                 <button
                   onClick={() => removeRow(idx)}
                   disabled={rows.length === 1}
-                  className="flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed self-end sm:self-center"
                   aria-label="Hapus baris"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

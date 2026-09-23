@@ -129,7 +129,7 @@ function MetricCard({
   return (
     <Card
       onClick={onClick}
-      className={onClick ? 'cursor-pointer hover:ring-2 hover:ring-red-200 transition-all' : ''}
+      className={onClick ? 'cursor-pointer hover:ring-2 hover:ring-indigo-200 transition-all' : ''}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-slate-500 flex items-center justify-between">
@@ -255,7 +255,7 @@ export default function PaymentReports() {
     }
   }
 
-  const STATUS_ORDER = ['Cuci Bahan', 'Potong Bahan', 'Jahit', 'Finishing', 'Siap Diambil'];
+  const STATUS_ORDER = ['Cuci Bahan', 'Potong Bahan', 'Jahit', 'Finishing', 'Siap Diambil', 'Selesai'];
 
   return (
     <div className="space-y-6">
@@ -289,13 +289,14 @@ export default function PaymentReports() {
       </div>
 
       {/* Main metric cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
           title="Total Pesanan"
           value={String(metrics.totalOrder)}
           sub="transaksi masuk"
           color="indigo"
           loading={loading}
+          onClick={() => window.location.href = `/payment-detail?period=${period}`}
         />
         <MetricCard
           title="Total Pemasukan"
